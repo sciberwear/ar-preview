@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SCIBERWEAR AR Preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @font-face {
+      font-family: 'SFMonoMedium';
+      src: url('https://cdn.jsdelivr.net/gh/sciberwear/assets@main/SFMonoMedium.otf');
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'SFMonoMedium', monospace;
+      font-size: 12px;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #e8e8e8;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+    }
+
+    .tab-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      background: #e8e8e8;
+      border: 1.8px solid #000;
+      padding: 6px 10px;
+      color: #000;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover,
+    .nav-btn.active {
+      background: #000;
+      color: #fff;
+    }
+
+    .section {
+      display: none;
+      max-width: 640px;
+      width: 100%;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 1.8px solid black;
+      overflow: hidden;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .sciberwear-progress {
+      position: absolute;
+      bottom: 10px;
+      left: 5%;
+      width: 90%;
+      appearance: none;
+      height: 6px;
+      background: linear-gradient(to right, #000 0%, #000 var(--progress, 0%), #b1b4b5 var(--progress, 0%), #b1b4b5 100%);
+      border-radius: 0;
+      cursor: pointer;
+      display: none;
+    }
+
+    .video-wrapper:hover .sciberwear-progress {
+      display: block;
+    }
+
+    .sciberwear-progress::-webkit-slider-thumb {
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      background: #e8e8e8;
+      border: 1.7px solid black;
+      cursor: pointer;
+      border-radius: 0;
+    }
+
+    .sciberwear-progress::-webkit-slider-thumb:hover {
+      background: #000;
+    }
+
+    .play-btn,
+    .restart-btn {
+      background: #e8e8e8;
+      border: 1.8px solid #000;
+      padding: 6px 10px;
+      color: #000;
+      cursor: pointer;
+      font-family: 'SFMonoMedium';
+      position: absolute;
+      right: 10px;
+      z-index: 2;
+      display: none;
+    }
+
+    .play-btn:hover,
+    .restart-btn:hover {
+      background: #000;
+      color: #fff;
+    }
+
+    .play-btn { top: 10px; }
+    .restart-btn { top: 46px; }
+
+    .video-wrapper:hover .play-btn,
+    .video-wrapper:hover .restart-btn {
+      display: block;
+    }
+
+    .control-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .control-btn {
+      background: #b7b7b7;
+      border: none;
+      padding: 6px 10px;
+      color: #000;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .control-btn:hover,
+    .control-btn.active {
+      background: #000;
+      color: #fff;
+    }
+
+    .help-box {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 1.8px solid #000;
+      background: #e8e8e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .playlist {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 160px;
+      background: #e8e8e8;
+      border: 1.8px solid #000;
+      padding: 8px;
+      z-index: 3;
+      display: none;
+    }
+
+    .playlist-item {
+      padding: 6px 4px;
+      cursor: pointer;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .playlist-item:hover,
+    .playlist-item.active {
+      background: #b1b4b5;
+    }
+
+    /* SHOW PLAYLIST ON HOVER */
+    #tutorial .video-wrapper:hover .playlist {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tab-buttons">
+      <button class="nav-btn active" onclick="switchTab('product')">Product</button>
+      <button class="nav-btn" onclick="switchTab('ar')">AR Display</button>
+      <button class="nav-btn" onclick="switchTab('tutorial')">Tutorial</button>
+      <button class="nav-btn" onclick="switchTab('help')">Help</button>
+    </div>
+
+    <div id="product" class="section active">
+      <div class="video-wrapper">
+        <video id="productVideo" muted autoplay></video>
+        <button class="play-btn" onclick="togglePlay('productVideo', this)">Pause</button>
+        <button class="restart-btn" onclick="restartVideo('productVideo')">Restart</button>
+        <input type="range" id="productProgress" class="sciberwear-progress" value="0" min="0" max="100" step="0.1">
+      </div>
+      <div class="control-bar">
+        <button class="control-btn active" onclick="loadProductVideo(0, this)">Full</button>
+        <button class="control-btn" onclick="loadProductVideo(1, this)">Front</button>
+        <button class="control-btn" onclick="loadProductVideo(2, this)">Back</button>
+      </div>
+    </div>
+
+    <div id="ar" class="section">
+      <div class="video-wrapper">
+        <video id="arVideo" muted></video>
+        <button class="play-btn" onclick="togglePlay('arVideo', this)">Pause</button>
+        <button class="restart-btn" onclick="restartVideo('arVideo')">Restart</button>
+        <input type="range" id="arProgress" class="sciberwear-progress" value="0" min="0" max="100" step="0.1">
+      </div>
+      <div class="control-bar">
+        <button class="control-btn" onclick="switchAR(-1)">Previous</button>
+        <span id="arIndex">1</span>
+        <button class="control-btn" onclick="switchAR(1)">Next</button>
+      </div>
+    </div>
+
+    <div id="tutorial" class="section">
+      <div class="video-wrapper">
+        <div class="playlist" id="tutorialPlaylist">
+          <div class="playlist-item" onclick="seekTo('tutorialVideo', 0, this)">Intro – 0:00</div>
+          <div class="playlist-item" onclick="seekTo('tutorialVideo', 30, this)">Scene 1 – 0:30</div>
+          <div class="playlist-item" onclick="seekTo('tutorialVideo', 60, this)">Scene 2 – 1:00</div>
+        </div>
+        <video id="tutorialVideo" muted></video>
+        <button class="play-btn" onclick="togglePlay('tutorialVideo', this)">Pause</button>
+        <button class="restart-btn" onclick="restartVideo('tutorialVideo')">Restart</button>
+        <input type="range" id="tutorialProgress" class="sciberwear-progress" value="0" min="0" max="100" step="0.1">
+      </div>
+    </div>
+
+    <div id="help" class="section">
+      <div class="help-box">
+        <div>
+          <h3>How to view Augmented Reality (AR)</h3>
+          <p>To experience AR, open your phone’s camera and scan the QR code or marker on the design. Make sure you're in a well-lit area and use a supported AR viewer.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.section');
+    const allVideos = document.querySelectorAll('video');
+    const sharedVideoURL = 'https://cdn.jsdelivr.net/gh/sciberwear/assets@main/clo3d-fashion-show-1080.mp4';
+
+    function switchTab(id) {
+      tabs.forEach(btn => btn.classList.remove('active'));
+      sections.forEach(sec => sec.classList.remove('active'));
+      document.querySelector(`[onclick*="${id}"]`).classList.add('active');
+      document.getElementById(id).classList.add('active');
+
+      allVideos.forEach(v => {
+        v.pause();
+        v.currentTime = 0;
+      });
+
+      const vid = document.getElementById(id + 'Video');
+      if (vid) vid.play();
+    }
+
+    function togglePlay(id, button) {
+      const video = document.getElementById(id);
+      if (video.paused) {
+        video.play();
+        button.textContent = 'Pause';
+      } else {
+        video.pause();
+        button.textContent = 'Play';
+      }
+    }
+
+    function restartVideo(id) {
+      const video = document.getElementById(id);
+      video.currentTime = 0;
+      video.play();
+    }
+
+    const productVideo = document.getElementById('productVideo');
+    const arVideo = document.getElementById('arVideo');
+    const tutorialVideo = document.getElementById('tutorialVideo');
+
+    const productProgress = document.getElementById('productProgress');
+    const arProgress = document.getElementById('arProgress');
+    const tutorialProgress = document.getElementById('tutorialProgress');
+
+    function setupProgress(video, progress) {
+      video.addEventListener('timeupdate', () => {
+        const percent = (video.currentTime / video.duration) * 100;
+        progress.value = percent;
+        progress.style.setProperty('--progress', `${percent}%`);
+      });
+      progress.addEventListener('input', () => {
+        video.currentTime = (progress.value / 100) * video.duration;
+      });
+    }
+
+    setupProgress(productVideo, productProgress);
+    setupProgress(arVideo, arProgress);
+    setupProgress(tutorialVideo, tutorialProgress);
+
+    const productVideos = [sharedVideoURL, sharedVideoURL, sharedVideoURL];
+    function loadProductVideo(index, btn) {
+      productVideo.src = productVideos[index];
+      productVideo.play();
+      document.querySelectorAll('#product .control-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    loadProductVideo(0, document.querySelector('#product .control-btn'));
+
+    const arVideos = [sharedVideoURL, sharedVideoURL, sharedVideoURL];
+    let arIndex = 0;
+    const arDisplay = document.getElementById('arIndex');
+    function switchAR(delta) {
+      arIndex = (arIndex + delta + arVideos.length) % arVideos.length;
+      arVideo.src = arVideos[arIndex];
+      arDisplay.textContent = arIndex + 1;
+      arVideo.play();
+    }
+    switchAR(0);
+
+    tutorialVideo.src = sharedVideoURL;
+
+    function seekTo(videoId, time, el) {
+      const video = document.getElementById(videoId);
+      video.currentTime = time;
+      video.play();
+
+      document.querySelectorAll('#tutorial .playlist-item').forEach(i => i.classList.remove('active'));
+      el.classList.add('active');
+    }
+  </script>
+</body>
+</html>
